@@ -1,4 +1,4 @@
-from config import client
+from backend.config import client
 
 queries = [
     "best laptops under $500",
