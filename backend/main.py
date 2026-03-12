@@ -1,8 +1,7 @@
-from fastapi import FastAPI
-from ai_query_engine import run_queries
-from product_extractor import extract_products
-from scoring import visibility_score, accuracy_score
-from competitor_analysis import competitor_share
+from backend.ai_query_engine import run_queries
+from backend.product_extractor import extract_products
+from backend.scoring import visibility_score, accuracy_score
+from backend.competitor_analysis import competitor_share
 
 app = FastAPI()
 
