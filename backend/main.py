@@ -1,3 +1,4 @@
+from fastapi import FastAPI
 from backend.ai_query_engine import run_queries
 from backend.product_extractor import extract_products
 from backend.scoring import visibility_score, accuracy_score
