@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VerifAI Dashboard</title>
+
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+  <header>
+    <h1>VerifAI</h1>
+    <p>AI Product Visibility & Accuracy Analyzer</p>
+  </header>
+
+  <section class="search-section">
+
+    <h2>Run AI Visibility Analysis</h2>
+
+    <input 
+      type="text" 
+      id="productInput" 
+      placeholder="Enter product name (example: Acer Aspire 5)"
+    />
+
+    <button onclick="runAnalysis()">
+      Run Analysis
+    </button>
+
+  </section>
+
+  <section class="results-section" id="results" style="display:none;">
+
+    <div class="scores">
+
+      <div class="card">
+        <h3>Visibility Score</h3>
+        <p id="visibilityScore">--%</p>
+      </div>
+
+      <div class="card">
+        <h3>Accuracy Score</h3>
+        <p id="accuracyScore">--%</p>
+      </div>
+
+    </div>
+
+    <div class="chart-container">
+
+      <h3>Competitor Presence in AI Responses</h3>
+
+      <canvas id="competitorChart"></canvas>
+
+    </div>
+
+  </section>
+
+  <footer>
+    <p>VerifAI Demo | AI Visibility Monitoring System</p>
+  </footer>
+
+  <script src="dashboard.js"></script>
+
+</body>
+</html>
