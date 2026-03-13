@@ -3,11 +3,11 @@ from backend.config import client
 def generate_queries(product):
 
     return [
+        f"What are the best {product} brands?",
         f"Where can I buy the best {product}?",
-        f"What stores sell the best {product}?",
-        f"Where should I buy a high quality {product}?",
-        f"What retailers sell the most popular {product}?",
-        f"Where do professionals buy their {product}?"
+        f"Top rated {product} products?",
+        f"What {product} do professionals recommend?",
+        f"What {product} should I buy online?"
     ]
 
 
@@ -17,13 +17,13 @@ def query_ai(product):
 
     responses = {}
 
-    for i, q in enumerate(queries):
+    for q in queries:
 
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role":"user","content":q}]
         )
 
-        responses[f"query_{i+1}"] = response.choices[0].message.content
+        responses[q] = response.choices[0].message.content
 
     return responses
