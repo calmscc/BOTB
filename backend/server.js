@@ -1,6 +1,5 @@
 import express from "express"
 import cors from "cors"
-import axios from "axios"
 import path from "path"
 import { fileURLToPath } from "url"
 
@@ -11,7 +10,7 @@ app.use(express.json())
 
 /*
 ========================================
-AI ENGINES (SIMULATED)
+AI ENGINES
 ========================================
 */
 
@@ -20,6 +19,92 @@ const aiEngines = [
  "gemini",
  "perplexity"
 ]
+
+/*
+========================================
+RETAIL STORES
+========================================
+*/
+
+const retailers = [
+ "Amazon",
+ "Walmart",
+ "Best Buy",
+ "Target",
+ "Costco",
+ "Newegg",
+ "B&H",
+ "Apple Store",
+ "Micro Center",
+ "Sam's Club"
+]
+
+/*
+========================================
+SIMULATED AI RESPONSE GENERATOR
+(~250 responses)
+========================================
+*/
+
+function generateResponses(){
+
+ const responses = []
+
+ const phrases = [
+
+  "The best place to buy PRODUCT is STORE.",
+  "Many shoppers purchase PRODUCT from STORE because of pricing.",
+  "You can find PRODUCT at retailers like STORE.",
+  "Experts recommend checking STORE for PRODUCT deals.",
+  "STORE offers competitive pricing for PRODUCT.",
+  "Customers often buy PRODUCT from STORE online.",
+  "Popular retailers for PRODUCT include STORE.",
+  "Many reviews mention STORE when buying PRODUCT.",
+  "Consumers frequently purchase PRODUCT at STORE.",
+  "STORE is a reliable option when shopping for PRODUCT."
+
+ ]
+
+ const extras = [
+
+  "due to fast shipping.",
+  "because of discounts.",
+  "because of product availability.",
+  "thanks to good return policies.",
+  "because of strong customer reviews.",
+  "due to competitive pricing.",
+  "because of convenient pickup options.",
+  "thanks to frequent promotions.",
+  "because of wide product selection.",
+  "due to trusted brand partnerships."
+
+ ]
+
+ for(const retailer of retailers){
+
+  for(const phrase of phrases){
+
+   for(const extra of extras){
+
+    const response =
+     phrase
+      .replace("STORE", retailer)
+      .replace("PRODUCT","headphones") +
+     " " + extra
+
+    responses.push(response)
+
+   }
+
+  }
+
+ }
+
+ return responses
+
+}
+
+const simulatedResponses = generateResponses()
 
 /*
 ========================================
@@ -42,120 +127,38 @@ PROMPT GENERATOR
 ========================================
 */
 
-async function harvestPrompts(product){
+function generatePrompts(product){
 
- const prompts = []
-
- const templates = [
+ return [
 
   `best ${product}`,
   `top rated ${product}`,
   `best ${product} brands`,
-  `best ${product} under 200`,
   `where to buy ${product}`,
   `best place to buy ${product}`,
   `best ${product} deals`,
   `what store sells ${product}`,
   `best ${product} online`,
-  `best ${product} reddit`
+  `best ${product} reddit`,
+  `top ${product} recommendations`
 
  ]
 
- templates.forEach(t=>prompts.push(t))
-
- return prompts
 }
 
 /*
 ========================================
-SEARCH HTML SOURCE — DUCKDUCKGO
+SIMULATED AI QUERY
 ========================================
 */
 
-async function searchDuckHTML(prompt){
+function querySimulatedAI(prompt){
 
- try{
+ const randomIndex =
+ Math.floor(Math.random() * simulatedResponses.length)
 
-  const url =
-  `https://html.duckduckgo.com/html/?q=${encodeURIComponent(prompt)}`
+ return simulatedResponses[randomIndex]
 
-  const res = await axios.get(url,{
-   timeout:15000,
-   headers:{
-    "User-Agent":"Mozilla/5.0"
-   }
-  })
-
-  return res.data
-
- }catch(err){
-
-  console.log("DuckDuckGo HTML failed:",prompt)
-
-  return ""
-
- }
-
-}
-
-/*
-========================================
-SEARCH HTML SOURCE — BING
-========================================
-*/
-
-async function searchBingHTML(prompt){
-
- try{
-
-  const url =
-  `https://www.bing.com/search?q=${encodeURIComponent(prompt)}`
-
-  const res = await axios.get(url,{
-   timeout:15000,
-   headers:{
-    "User-Agent":"Mozilla/5.0"
-   }
-  })
-
-  return res.data
-
- }catch(err){
-
-  console.log("Bing HTML failed:",prompt)
-
-  return ""
-
- }
-
-}
-
-/*
-========================================
-MULTI-SOURCE SEARCH
-========================================
-*/
-
-async function querySearch(prompt){
-
- const sources = [
-
-  searchDuckHTML,
-  searchBingHTML
-
- ]
-
- for(const source of sources){
-
-  const html = await source(prompt)
-
-  if(html && html.length > 0){
-   return html
-  }
-
- }
-
- return ""
 }
 
 /*
@@ -164,13 +167,13 @@ AI VISIBILITY AUDIT
 ========================================
 */
 
-app.post("/api/audit", async (req,res)=>{
+app.post("/api/audit",(req,res)=>{
 
  const { store, product } = req.body
 
- console.log("Starting audit:",store,product)
+ console.log("Running demo audit:",store,product)
 
- const prompts = await harvestPrompts(product)
+ const prompts = generatePrompts(product)
 
  const mentions = {}
 
@@ -180,13 +183,11 @@ app.post("/api/audit", async (req,res)=>{
 
  for(const prompt of prompts){
 
-  console.log("Testing prompt:",prompt)
-
-  const html = await querySearch(prompt)
-
   for(const engine of aiEngines){
 
-   if(html.toLowerCase().includes(store.toLowerCase())){
+   const response = querySimulatedAI(prompt)
+
+   if(response.toLowerCase().includes(store.toLowerCase())){
     mentions[engine]++
    }
 
@@ -197,13 +198,9 @@ app.post("/api/audit", async (req,res)=>{
  const visibility = {}
 
  aiEngines.forEach(engine=>{
-
   visibility[engine] =
    Math.round((mentions[engine] / prompts.length) * 100)
-
  })
-
- console.log("Audit finished")
 
  res.json({
 
