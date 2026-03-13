@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.ai_query_engine import query_ai
-from backend.retail_extractor import extract_products
+from backend.retail_extractor import extract_retailers
 from backend.audit_engine import ai_visibility_audit
 from backend.verification_engine import verify_product_accuracy
 
