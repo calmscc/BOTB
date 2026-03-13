@@ -2,7 +2,6 @@ import json
 import os
 from backend.config import client
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 def extract_products(text):
 
