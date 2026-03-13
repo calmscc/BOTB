@@ -1,5 +1,4 @@
 import json
-import os
 from backend.config import client
 
 
@@ -8,7 +7,7 @@ def extract_products(text):
     prompt = f"""
 Extract product or brand names from this text.
 
-Return JSON like this:
+Return ONLY valid JSON in this format:
 
 {{"products":["brand1","brand2","brand3"]}}
 
@@ -18,15 +17,19 @@ Text:
 
     response = client.chat.completions.create(
         model="openai/gpt-oss-120b",
-        messages=[{"role":"user","content":prompt}]
+        messages=[
+            {"role": "system", "content": "Return only valid JSON."},
+            {"role": "user", "content": prompt}
+        ]
     )
 
+    content = response.choices[0].message.content
+
     try:
+        data = json.loads(content)
+        return data.get("products", [])
 
-        data = json.loads(response.choices[0].message.content)
-
-        return data["products"]
-
-    except:
-
+    except Exception as e:
+        print("JSON parse error:", e)
+        print("Model output:", content)
         return []
