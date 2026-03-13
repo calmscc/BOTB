@@ -1,47 +1,44 @@
-import axios from "axios";
+export function generatePrompts(product){
 
-export async function harvestPrompts(product){
-
- const prompts = [];
-
- try {
-
-  const googleURL =
-  `https://suggestqueries.google.com/complete/search?client=firefox&q=${product}`;
-
-  const googleRes = await axios.get(googleURL);
-
-  googleRes.data[1].forEach(p => prompts.push(p));
-
- } catch {}
-
- try {
-
-  const redditURL =
-  `https://www.reddit.com/search.json?q=${product}&limit=20`;
-
-  const redditRes = await axios.get(redditURL);
-
-  redditRes.data.data.children.forEach(post => {
-   prompts.push(post.data.title);
-  });
-
- } catch {}
+ const prompts = []
 
  const templates = [
 
-  `best ${product}`,
-  `top rated ${product}`,
-  `best ${product} under 200`,
-  `where to buy ${product}`,
-  `best place to buy ${product}`,
-  `best ${product} deals`,
-  `what store sells ${product}`
+ "best PRODUCT",
+ "top rated PRODUCT",
+ "best PRODUCT brands",
+ "where to buy PRODUCT",
+ "best place to buy PRODUCT",
+ "best PRODUCT deals",
+ "best PRODUCT under 100",
+ "best PRODUCT under 200",
+ "best PRODUCT reddit",
+ "best PRODUCT for beginners",
+ "best PRODUCT for professionals",
+ "best PRODUCT online",
+ "what store sells PRODUCT",
+ "cheap PRODUCT vs expensive",
+ "most popular PRODUCT",
+ "best selling PRODUCT",
+ "high quality PRODUCT",
+ "top PRODUCT reviews",
+ "best PRODUCT recommendations",
+ "best PRODUCT 2025"
 
- ];
+ ]
 
- templates.forEach(t => prompts.push(t));
+ for(let i=0;i<10;i++){
 
- return [...new Set(prompts)];
+  templates.forEach(t=>{
+
+   prompts.push(
+    t.replace("PRODUCT",product)
+   )
+
+  })
+
+ }
+
+ return prompts
 
 }
