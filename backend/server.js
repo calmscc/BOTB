@@ -4,6 +4,21 @@ import axios from "axios";
 import path from "path";
 import { fileURLToPath } from "url";
 
+
+const retailStores = [
+ "Amazon",
+ "Walmart",
+ "Target",
+ "Best Buy",
+ "Costco",
+ "Home Depot",
+ "Lowe's",
+ "Apple",
+ "Samsung"
+];
+
+
+
 const app = express();
 
 app.use(cors());
@@ -146,13 +161,71 @@ function expandPrompts(keyword){
 
 }
 
-async function harvestPrompts(keyword){
+async function harvestPrompts(product){
 
- const google = await getGooglePrompts(keyword)
+ const prompts = []
 
- const expanded = expandPrompts(keyword)
+ /* GOOGLE AUTOCOMPLETE */
 
- const prompts = [...google,...expanded]
+ try{
+
+  const googleURL =
+  `https://suggestqueries.google.com/complete/search?client=firefox&q=${product}`
+
+  const googleRes = await axios.get(googleURL)
+
+  const suggestions = googleRes.data[1]
+
+  suggestions.forEach(s=>{
+   prompts.push(s)
+  })
+
+ }catch(e){
+  console.log("Google suggestions failed")
+ }
+
+ /* REDDIT QUESTIONS */
+
+ try{
+
+  const redditURL =
+  `https://www.reddit.com/search.json?q=${product}&limit=20`
+
+  const redditRes = await axios.get(redditURL)
+
+  const posts = redditRes.data.data.children
+
+  posts.forEach(post=>{
+   prompts.push(post.data.title)
+  })
+
+ }catch(e){
+  console.log("Reddit prompts failed")
+ }
+
+ const templates = [
+
+  `best ${product}`,
+  `top rated ${product}`,
+  `best ${product} brands`,
+  `best ${product} under 100`,
+  `best ${product} under 200`,
+  `where to buy ${product}`,
+  `best place to buy ${product}`,
+  `best ${product} deals`,
+  `what store sells ${product}`,
+  `best ${product} online`,
+  `what ${product} do professionals recommend`,
+  `cheap ${product} vs expensive`,
+  `best ${product} reddit`,
+  `best ${product} for beginners`,
+  `best ${product} for professionals`
+
+ ]
+
+ templates.forEach(t=>{
+  prompts.push(t)
+ })
 
  return [...new Set(prompts)]
 
@@ -195,44 +268,37 @@ app.post("/api/audit", async (req,res)=>{
 
  const { product } = req.body
 
- auditStatus = {
-  progress:0,
-  currentPrompt:"",
-  completed:false,
-  results:null
- }
-
  const prompts = await harvestPrompts(product)
 
- const brands = [...new Set(products.map(p=>p.brand))]
+ const storeCounts = {}
 
- let mentions = 0
+ retailStores.forEach(store=>{
+  storeCounts[store] = 0
+ })
 
- for(let i=0;i<prompts.length;i++){
-
-  const prompt = prompts[i]
-
-  auditStatus.currentPrompt = prompt
-  auditStatus.progress = Math.floor((i/prompts.length)*100)
+ for(const prompt of prompts){
 
   const response = await queryAI(prompt)
 
-  const found = extractMentions(response,brands)
+  for(const store of retailStores){
 
-  if(found.length > 0) mentions++
+   if(response.toLowerCase().includes(store.toLowerCase())){
+    storeCounts[store]++
+   }
+
+  }
 
  }
 
- const score = (mentions / prompts.length) * 100
+ const rankings = Object.entries(storeCounts)
+  .sort((a,b)=> b[1] - a[1])
+  .map(([store,mentions])=>({store,mentions}))
 
- auditStatus.completed = true
-
- auditStatus.results = {
-  visibilityScore:Math.round(score),
-  promptsTested:prompts.length
- }
-
- res.json({ message:"Audit started" })
+ res.json({
+  product,
+  promptsTested: prompts.length,
+  rankings
+ })
 
 })
 
