@@ -157,11 +157,15 @@ async function queryAI(engine, prompt){
 
  try{
 
-  const url =
-  `https://api.duckduckgo.com/?q=${prompt}&format=json`
+const encodedPrompt = encodeURIComponent(prompt)
+
+const url = `https://api.duckduckgo.com/?q=${encodedPrompt}&format=json`
 
   const res = await axios.get(url, {
-   timeout: 5000
+   timeout: 5000,
+    headers: {
+     "User-Agent": "Mozilla/5.0 (NOLAlytics AI Analyzer)"
+ }
   })
 
   const text =
@@ -171,13 +175,14 @@ async function queryAI(engine, prompt){
 
   return text
 
- }catch(err){
-
-  console.log("Query failed:", prompt)
-
-  return ""
-
  }
+ 
+ 
+catch(err){
+ console.log("Query failed:", prompt)
+ console.log("Error:", err.message)
+ return ""
+}
 
 }
 
