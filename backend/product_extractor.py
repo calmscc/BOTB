@@ -17,7 +17,7 @@ Text:
 """
 
     response = client.chat.completions.create(
-        model="llama3-8b-8192",
+        model="openai/gpt-oss-120b",
         messages=[{"role":"user","content":prompt}]
     )
 
