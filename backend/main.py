@@ -1,10 +1,10 @@
 import sys
 import json
 
-from backend.ai_query_engine import query_ai
-from backend.retail_extractor import extract_retailers
-from backend.audit_engine import ai_visibility_audit
-from backend.verification_engine import verify_product_accuracy
+from ai_query_engine import query_ai
+from retail_extractor import extract_retailers
+from audit_engine import ai_visibility_audit
+from verification_engine import verify_product_accuracy
 
 
 def run_analysis(product, brand):
