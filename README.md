@@ -296,36 +296,3 @@ NOLAlytics can evolve into a full AI analytics platform with:
 • SEO-style AI optimization tools  
 • Brand monitoring dashboards  
 • Automated weekly reports  
-
----
-
-# 🏆 Hackathon Vision
-
-AI assistants are becoming the **new search engines**.
-
-Companies will need to track:
-
-> **“How visible are we in AI?”**
-
-NOLAlytics provides the foundation for **AI visibility analytics.**
-
----
-
-# 👥 Team
-
-Battle of the Brains Hackathon Project
-
-Developed to explore the intersection of:
-
-- AI
-- Retail analytics
-- Search visibility
-- Data science
-
----
-
-# ⭐ Final Note
-
-NOLAlytics demonstrates how businesses can **measure their presence in the emerging AI-powered discovery ecosystem.**
-
-As AI reshapes commerce, tools like NOLAlytics will become essential for understanding **who AI recommends — and why.**
