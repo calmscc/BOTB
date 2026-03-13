@@ -52,3 +52,8 @@ def analyze(product: str, brand: str):
     except Exception as e:
         print("ERROR:", e)
         return {"error": str(e)}
+
+
+@app.get("/test-ai")
+def test_ai():
+    return query_ai("laptops")
