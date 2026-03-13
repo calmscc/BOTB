@@ -1,271 +1,392 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-
-<title>NOLAlytics AI Retail Visibility Analyzer</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOLAlytics</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-
+/* --- Your UI Styles --- */
 body{
- font-family:Arial;
- max-width:1100px;
- margin:auto;
- padding:40px;
- background:#f5f7fb;
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:#0f0f0f;
+    color:white;
+    display:flex;
 }
 
-h1{
- margin-bottom:10px;
+/* Sidebar */
+.sidebar{
+    width:240px;
+    background:#121212;
+    height:100vh;
+    padding:20px;
+    border-right:1px solid #222;
 }
 
-h2{
- margin-top:40px;
+.sidebar h3{
+    margin-bottom:20px;
 }
 
-button{
- padding:10px 15px;
- margin-top:10px;
- cursor:pointer;
+.sidebar h3 a{
+    text-decoration:none;
+    color:white;
 }
 
-input{
- padding:10px;
- margin-right:10px;
+.sidebar a{
+    display:block;
+    padding:10px;
+    text-decoration:none;
+    color:#ccc;
+    border-radius:6px;
+    margin-bottom:6px;
 }
 
+.sidebar a:hover{
+    background:#1e1e1e;
+    color:white;
+}
+
+/* Main */
+.main{
+    flex:1;
+    display:flex;
+    justify-content:flex-start;
+    align-items:flex-start;
+    flex-direction:column;
+    padding:40px;
+}
+
+/* Welcome Message */
+.welcome-area{
+    text-align:center;
+    margin-bottom:40px;
+}
+
+.welcome-area h1{
+    font-size:42px;
+    font-weight:500;
+    color:#ddd;
+}
+
+.welcome-area p{
+    color:#aaa;
+    margin-top:10px;
+}
+
+/* Search */
+.search-box{
+    width:600px;
+    max-width:90%;
+    background:#1a1a1a;
+    border-radius:16px;
+    padding:16px;
+    border:1px solid #333;
+    display:flex;
+    align-items:center;
+    position:relative;
+}
+
+.search-box input{
+    flex:1;
+    background:none;
+    border:none;
+    outline:none;
+    color:white;
+    font-size:16px;
+    padding:8px;
+}
+
+.search-icons{
+    display:flex;
+    gap:10px;
+    align-items:center;
+}
+
+.icon{
+    width:32px;
+    height:32px;
+    border-radius:50%;
+    background:#2a2a2a;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:14px;
+    cursor:pointer;
+}
+
+.icon:hover{
+    background:#3a3a3a;
+}
+
+/* Model Button */
+.model-btn{
+    margin-left:10px;
+    background:#2a2a2a;
+    padding:6px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+}
+
+.model-btn:hover{
+    background:#3a3a3a;
+}
+
+/* Dropdown */
+.dropdown{
+    position:absolute;
+    background:#1b1b1b;
+    border:1px solid #333;
+    border-radius:10px;
+    padding:8px;
+    width:230px;
+    display:none;
+    flex-direction:column;
+    box-shadow:0 10px 25px rgba(0,0,0,0.5);
+    animation:fadeIn .15s ease;
+}
+
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(6px);}
+    to{opacity:1; transform:translateY(0);}
+}
+
+.dropdown div{
+    padding:10px;
+    border-radius:6px;
+    color:#ccc;
+    cursor:pointer;
+}
+
+.dropdown div:hover{
+    background:#2a2a2a;
+    color:white;
+}
+
+/* Cards from partner's HTML */
 .card-container{
- display:flex;
- gap:20px;
- margin-top:20px;
+    display:flex;
+    gap:20px;
+    margin-top:20px;
 }
 
 .card{
- background:white;
- padding:20px;
- border-radius:10px;
- flex:1;
- box-shadow:0 2px 6px rgba(0,0,0,0.1);
- text-align:center;
+    background:#1a1a1a;
+    color:white;
+    padding:20px;
+    border-radius:10px;
+    flex:1;
+    text-align:center;
 }
 
-#results{
- margin-top:20px;
- background:white;
- padding:20px;
- border-radius:8px;
- box-shadow:0 2px 6px rgba(0,0,0,0.1);
-}
-
-#history{
- margin-top:20px;
- background:white;
- padding:20px;
- border-radius:8px;
+#results, #history{
+    margin-top:20px;
+    background:#1a1a1a;
+    padding:20px;
+    border-radius:8px;
 }
 
 canvas{
- margin-top:30px;
- background:white;
- padding:20px;
- border-radius:10px;
- box-shadow:0 2px 6px rgba(0,0,0,0.1);
+    margin-top:30px;
+    background:#1a1a1a;
+    padding:20px;
+    border-radius:10px;
 }
-
 </style>
-
 </head>
 
 <body>
 
-<h1>NOLAlytics AI Retail Visibility Analyzer</h1>
+<!-- Sidebar -->
+<div class="sidebar">
+<h3>
+<a href="subscription.html">NOLAlytics</a>
+</h3>
 
-<p>
-Analyze how frequently a retailer appears in AI-generated product recommendations.
-</p>
+<a href="#">Search</a>
+<a href="#">Dashboard</a>
+<a href="#">Analytics</a>
+<a href="#">Reports</a>
+<a href="#">Data Sources</a>
+<a href="#">Settings</a>
 
-<h2>Run AI Visibility Audit</h2>
+</div>
 
-<input id="storeInput" placeholder="Retail Store (example: Walmart)" />
+<!-- Main -->
+<div class="main">
 
-<input id="productInput" placeholder="Product (example: headphones)" />
+<div class="welcome-area">
+<h1>Welcome to NOLAlytics</h1>
+<p>Your AI-powered analytics assistant for exploring and understanding data.</p>
+</div>
 
-<button onclick="runAudit()">Analyze Visibility</button>
+<!-- Search Box -->
+<div class="search-box">
+<input id="searchInput" type="text" placeholder="Retail Store and Product (e.g., Walmart headphones)">
+<div class="search-icons">
+<div class="icon" onclick="toggleMenu('uploadMenu')">+</div>
+<div class="icon">🎤</div>
+<div class="model-btn" id="modelButton" onclick="toggleMenu('modelMenu')">
+Model ▼
+</div>
+</div>
 
+<!-- Upload Dropdown -->
+<div class="dropdown" id="uploadMenu">
+<div>Upload files or images</div>
+<div>Add files from cloud</div>
+<div>Connectors and sources</div>
+<div>Deep research</div>
+<div>Model council</div>
+<div>More</div>
+</div>
+
+<!-- Model Dropdown -->
+<div class="dropdown" id="modelMenu">
+<div onclick="selectModel('Crescent')">Crescent</div>
+<div onclick="selectModel('BLEU-5o4')">BLEU-5o4</div>
+<div onclick="selectModel('DU.1869')">DU.1869</div>
+</div>
+</div>
+
+<!-- Partner's Cards -->
 <div class="card-container">
-
 <div class="card">
 <h3>Prompts Tested</h3>
 <h2 id="promptCount">0</h2>
 </div>
-
 <div class="card">
 <h3>Best AI Engine</h3>
 <h2 id="bestEngine">-</h2>
 </div>
-
 <div class="card">
 <h3>Highest Score</h3>
 <h2 id="bestScore">0%</h2>
 </div>
-
 </div>
 
 <div id="results"></div>
 
 <h2>AI Visibility Leaderboard</h2>
-
 <canvas id="visibilityChart"></canvas>
 
 <h2>Audit History (Database)</h2>
-
-<div id="history">
-Loading audits...
-</div>
+<div id="history">Loading audits...</div>
 
 <script>
+// --- UI Dropdowns ---
+function toggleMenu(menuId){
+    const menu = document.getElementById(menuId)
+    const isVisible = menu.style.display === "flex"
+    document.querySelectorAll(".dropdown").forEach(m => m.style.display="none")
+    menu.style.display = isVisible ? "none" : "flex"
+}
 
+function selectModel(model){
+    document.getElementById("modelButton").innerText = model + " ▼"
+    document.getElementById("modelMenu").style.display="none"
+}
+
+/* Close menus if clicking outside */
+window.onclick = function(e){
+    if(!e.target.closest(".icon") && !e.target.closest(".model-btn")){
+        document.querySelectorAll(".dropdown").forEach(m => m.style.display="none")
+    }
+}
+
+// --- Partner's JS for AI Backend ---
 let chart
 
 async function runAudit(){
+    const input = document.getElementById("searchInput").value.trim()
+    if(!input){
+        alert("Please enter a store and product")
+        return
+    }
+    // Split input into store and product
+    const parts = input.split(" ")
+    const store = parts[0]
+    const product = parts.slice(1).join(" ")
 
- const store = document.getElementById("storeInput").value
- const product = document.getElementById("productInput").value
+    document.getElementById("results").innerHTML = "Running AI visibility audit..."
 
- document.getElementById("results").innerHTML =
- "Running AI visibility audit..."
+    try{
+        const res = await fetch("/api/audit",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({ store, product })
+        })
 
- const res = await fetch("/api/audit",{
+        const data = await res.json()
 
-  method:"POST",
-  headers:{
-   "Content-Type":"application/json"
-  },
-  body:JSON.stringify({ store, product })
+        if(data.error){
+            document.getElementById("results").innerHTML = data.error
+            return
+        }
 
- })
+        // Update cards
+        document.getElementById("promptCount").innerText = data.promptsTested
+        document.getElementById("bestEngine").innerText = Object.keys(data.visibility).reduce((a,b)=>data.visibility[a]>data.visibility[b]?a:b).toUpperCase()
+        document.getElementById("bestScore").innerText = Math.max(...Object.values(data.visibility)) + "%"
 
- const data = await res.json()
+        // Build results HTML
+        let html = `<h3>Audit Results</h3>
+        Store: <b>${data.store}</b><br>
+        Product: <b>${data.product}</b><br><br>`
 
- if(data.error){
+        Object.keys(data.visibility).forEach(engine=>{
+            html += `<b>${engine.toUpperCase()}</b><br>
+            Mentions: ${data.mentions[engine]}<br>
+            Visibility Score: ${data.visibility[engine]}%<br><br>`
+        })
 
-  document.getElementById("results").innerHTML = data.error
-  return
+        document.getElementById("results").innerHTML = html
 
- }
+        renderChart(data.visibility)
+        loadHistory()
 
- document.getElementById("promptCount").innerText =
- data.promptsTested
-
- let html = `
- <h3>Audit Results</h3>
- Store: <b>${data.store}</b><br>
- Product: <b>${data.product}</b><br><br>
- `
-
- const engines = Object.keys(data.visibility)
- const scores = Object.values(data.visibility)
-
- let bestScore = 0
- let bestEngine = ""
-
- engines.forEach((engine,i)=>{
-
-  html += `
-   <b>${engine.toUpperCase()}</b><br>
-   Mentions: ${data.mentions[engine]}<br>
-   Visibility Score: ${data.visibility[engine]}%<br><br>
-  `
-
-  if(scores[i] > bestScore){
-   bestScore = scores[i]
-   bestEngine = engine
-  }
-
- })
-
- document.getElementById("bestEngine").innerText =
- bestEngine.toUpperCase()
-
- document.getElementById("bestScore").innerText =
- bestScore + "%"
-
- document.getElementById("results").innerHTML = html
-
- renderChart(data.visibility)
-
- loadHistory()
-
+    } catch(err){
+        document.getElementById("results").innerHTML = "Error connecting to AI backend."
+        console.error(err)
+    }
 }
 
 function renderChart(visibility){
-
- const labels = Object.keys(visibility)
- const values = Object.values(visibility)
-
- const ctx =
- document.getElementById("visibilityChart").getContext("2d")
-
- if(chart){
-  chart.destroy()
- }
-
- chart = new Chart(ctx,{
-
-  type:"bar",
-
-  data:{
-   labels:labels,
-   datasets:[{
-    label:"AI Visibility %",
-    data:values,
-    borderWidth:1
-   }]
-  },
-
-  options:{
-   scales:{
-    y:{
-     beginAtZero:true,
-     max:100
-    }
-   }
-  }
-
- })
-
+    const labels = Object.keys(visibility)
+    const values = Object.values(visibility)
+    const ctx = document.getElementById("visibilityChart").getContext("2d")
+    if(chart){ chart.destroy() }
+    chart = new Chart(ctx,{
+        type:"bar",
+        data:{ labels, datasets:[{ label:"AI Visibility %", data:values, borderWidth:1 }] },
+        options:{ scales:{ y:{ beginAtZero:true, max:100 } } }
+    })
 }
 
 async function loadHistory(){
-
- const res = await fetch("/api/history")
- const data = await res.json()
-
- let html = ""
-
- data.forEach(audit=>{
-
-  html += `
-   <div>
-    <b>${audit.store}</b> – ${audit.product}
-    <br>
-    Prompts: ${audit.promptsTested}
-    <hr>
-   </div>
-  `
-
- })
-
- document.getElementById("history").innerHTML = html
-
+    try{
+        const res = await fetch("/api/history")
+        const data = await res.json()
+        let html = ""
+        data.forEach(audit=>{
+            html += `<div><b>${audit.store}</b> – ${audit.product}<br>Prompts: ${audit.promptsTested}<hr></div>`
+        })
+        document.getElementById("history").innerHTML = html
+    } catch(err){
+        document.getElementById("history").innerHTML = "Unable to load history."
+    }
 }
 
-loadHistory()
+// Trigger audit when pressing Enter
+document.getElementById("searchInput").addEventListener("keypress", function(e){
+    if(e.key==="Enter"){ runAudit() }
+})
 
 </script>
 
 </body>
-
 </html>
