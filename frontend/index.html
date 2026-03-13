@@ -1,155 +1,121 @@
 <!-- frontend/index.html -->
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOTB Analyzer</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        input, button { padding: 8px; margin: 5px; }
-        .section { margin-top: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-        table, th, td { border: 1px solid #ddd; }
-        th, td { padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .heat { font-weight: bold; color: white; text-align: center; }
-    </style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>NOLAlytics AI Visibility Dashboard</title>
+
+<link rel="stylesheet" href="/static/style.css">
+
 </head>
+
+
 <body>
 
-    <h1>BOTB Product Analyzer</h1>
+<h1>NOLAlytics AI Product Visibility Analyzer</h1>
 
-    <div class="section">
-        <input type="text" id="product" placeholder="Enter product (e.g., laptop)">
-        <input type="text" id="brand" placeholder="Enter brand (e.g., Dell)">
-        <button onclick="analyzeProduct()">Analyze</button>
-    </div>
+<p>
+Measure how often your products appear in AI-generated recommendations
+and identify competitors dominating AI product discovery.
+</p>
 
-    <div class="section" id="results-section" style="display:none;">
-        <h2>Platform Products</h2>
-        <table id="platform-products-table">
-            <thead>
-                <tr>
-                    <th>Platform</th>
-                    <th>Products</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
 
-        <h2>Competitor Share</h2>
-        <table id="competitors-table">
-            <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Count</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+<div class="section">
 
-        <h2>Visibility Score</h2>
-        <table id="visibility-table">
-            <thead>
-                <tr>
-                    <th>Platform</th>
-                    <th>Score</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+<h2>Run AI Visibility Audit</h2>
 
-        <h2>Accuracy</h2>
-        <div id="accuracy"></div>
-    </div>
+<input id="product" type="text" placeholder="Product (example: hammer)">
+<input id="brand" type="text" placeholder="Brand or Retailer (example: Stanley or Home Depot)">
 
-    <script>
-        function getHeatColor(value, max) {
-            // Simple red-green heatmap
-            const ratio = value / max;
-            const r = Math.floor(255 * ratio);
-            const g = Math.floor(255 * (1 - ratio));
-            return `rgb(${r},${g},0)`;
-        }
+<button onclick="run()">Analyze</button>
 
-        async function analyzeProduct() {
-            const product = document.getElementById("product").value;
-            const brand = document.getElementById("brand").value;
+</div>
 
-            if (!product || !brand) {
-                alert("Please enter both product and brand.");
-                return;
-            }
 
-            try {
-                const response = await fetch(`/analyze?product=${encodeURIComponent(product)}&brand=${encodeURIComponent(brand)}`);
-                const data = await response.json();
 
-                document.getElementById("results-section").style.display = "block";
+<div id="results-section" style="display:none">
 
-                // --- Platform Products Table ---
-                const platformProductsBody = document.querySelector("#platform-products-table tbody");
-                platformProductsBody.innerHTML = "";
-                for (const [platform, products] of Object.entries(data.platform_products)) {
-                    const tr = document.createElement("tr");
-                    const tdPlatform = document.createElement("td");
-                    tdPlatform.textContent = platform;
-                    const tdProducts = document.createElement("td");
-                    tdProducts.textContent = products.join(", ");
-                    tr.appendChild(tdPlatform);
-                    tr.appendChild(tdProducts);
-                    platformProductsBody.appendChild(tr);
-                }
 
-                // --- Competitor Share Table with Heatmap ---
-                const competitorsBody = document.querySelector("#competitors-table tbody");
-                competitorsBody.innerHTML = "";
-                const counts = Object.values(data.competitors);
-                const flatCounts = {};
-                for (const platform in counts) {
-                    for (const [productName, count] of Object.entries(counts[platform])) {
-                        flatCounts[productName] = count;
-                    }
-                }
-                const maxCount = Math.max(...Object.values(flatCounts));
+<div class="section">
 
-                for (const [productName, count] of Object.entries(flatCounts)) {
-                    const tr = document.createElement("tr");
-                    const tdProduct = document.createElement("td");
-                    tdProduct.textContent = productName;
-                    const tdCount = document.createElement("td");
-                    tdCount.textContent = count;
-                    tdCount.className = "heat";
-                    tdCount.style.backgroundColor = getHeatColor(count, maxCount);
-                    tr.appendChild(tdProduct);
-                    tr.appendChild(tdCount);
-                    competitorsBody.appendChild(tr);
-                }
+<h2>AI Visibility Score</h2>
 
-                // --- Visibility Table ---
-                const visibilityBody = document.querySelector("#visibility-table tbody");
-                visibilityBody.innerHTML = "";
-                for (const [platform, score] of Object.entries(data.visibility)) {
-                    const tr = document.createElement("tr");
-                    const tdPlatform = document.createElement("td");
-                    tdPlatform.textContent = platform;
-                    const tdScore = document.createElement("td");
-                    tdScore.textContent = score;
-                    tr.appendChild(tdPlatform);
-                    tr.appendChild(tdScore);
-                    visibilityBody.appendChild(tr);
-                }
+<div id="visibility" class="scoreBox"></div>
 
-                // --- Accuracy ---
-                document.getElementById("accuracy").textContent = data.accuracy;
+</div>
 
-            } catch (err) {
-                console.error(err);
-                alert("Error fetching analysis. Check console for details.");
-            }
-        }
-    </script>
+
+
+<div class="section">
+
+<h2>AI Accuracy Score</h2>
+
+<div id="accuracy" class="scoreBox"></div>
+
+</div>
+
+
+
+<div class="section">
+
+<h2>AI Platform Results</h2>
+
+<table id="platform-products-table">
+
+<thead>
+<tr>
+<th>AI Query</th>
+<th>Products Mentioned</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+</div>
+
+
+
+<div class="section">
+
+<h2>Competitor Mentions</h2>
+
+<table id="competitors-table">
+
+<thead>
+<tr>
+<th>Brand / Product</th>
+<th>Mentions</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+</div>
+
+
+
+<div class="section">
+
+<h2>AI Responses</h2>
+
+<div id="responses"></div>
+
+</div>
+
+
+</div>
+
+
+<script src="/static/dashboard.js"></script>
 
 </body>
 </html>
