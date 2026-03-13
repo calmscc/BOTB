@@ -1,14 +1,17 @@
-from backend.config import client
 import json
+import os
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def extract_products(text):
 
     prompt = f"""
-Extract product names mentioned in this AI answer.
+Extract product or brand names from this text.
 
 Return JSON like this:
 
-{{"products":["product1","product2"]}}
+{{"products":["brand1","brand2","brand3"]}}
 
 Text:
 {text}
@@ -19,9 +22,12 @@ Text:
         messages=[{"role":"user","content":prompt}]
     )
 
-    data = response.choices[0].message.content
-
     try:
-        return json.loads(data)["products"]
+
+        data = json.loads(response.choices[0].message.content)
+
+        return data["products"]
+
     except:
+
         return []
