@@ -18,32 +18,37 @@ def home():
 
 
 @app.get("/analyze")
+def analyze(product: str, brand: str):
 
-def analyze(product:str, brand:str):
+    try:
 
-    responses = query_ai(product)
+        responses = query_ai(product)
 
-    platform_products = {}
+        platform_products = {}
 
-    for platform, text in responses.items():
+        for platform, text in responses.items():
 
-        products = extract_products(text)
+            products = extract_products(text)
 
-        platform_products[platform] = products
+            platform_products[platform] = products
 
-    competitors = competitor_share(platform_products)
+        competitors = competitor_share(platform_products)
 
-    visibility = visibility_score(platform_products, brand)
+        visibility = visibility_score(platform_products, brand)
 
-    accuracy = accuracy_score()
+        accuracy = accuracy_score()
 
-    heat = heatmap(platform_products)
+        heat = heatmap(platform_products)
 
-    return {
-        "responses": responses,
-        "platform_products": platform_products,
-        "competitors": competitors,
-        "visibility": visibility,
-        "accuracy": accuracy,
-        "heatmap": heat
-    }
+        return {
+            "responses": responses,
+            "platform_products": platform_products,
+            "competitors": competitors,
+            "visibility": visibility,
+            "accuracy": accuracy,
+            "heatmap": heat
+        }
+
+    except Exception as e:
+        print("ERROR:", e)
+        return {"error": str(e)}
