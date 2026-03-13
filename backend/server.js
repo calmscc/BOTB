@@ -9,11 +9,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-/*
-=====================================================
-RETAIL STORES WE TRACK
-=====================================================
-*/
 
 const retailStores = [
  "Amazon",
@@ -27,20 +22,20 @@ const retailStores = [
  "Samsung"
 ];
 
-/*
-=====================================================
-PATH SETUP
-=====================================================
-*/
+
+
+const aiEngines = [
+ "chatgpt",
+ "gemini",
+ "perplexity"
+];
+
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/*
-=====================================================
-SERVE FRONTEND
-=====================================================
-*/
+
 
 app.use(express.static(path.join(__dirname, "../frontend")));
 
@@ -48,11 +43,7 @@ app.get("/", (req, res) => {
  res.sendFile(path.join(__dirname, "../frontend/dashboard.html"));
 });
 
-/*
-=====================================================
-GENERATED PRODUCT DATABASE
-=====================================================
-*/
+
 
 function generateProducts(){
 
@@ -131,18 +122,11 @@ function generateProducts(){
 
 const products = generateProducts()
 
-/*
-=====================================================
-PROMPT HARVESTER
-(Google + Reddit + templates)
-=====================================================
-*/
 
 async function harvestPrompts(product){
 
  const prompts = []
 
- /* GOOGLE AUTOCOMPLETE */
 
  try{
 
@@ -161,7 +145,7 @@ async function harvestPrompts(product){
   console.log("Google suggestions failed")
  }
 
- /* REDDIT QUESTIONS */
+
 
  try{
 
@@ -180,7 +164,6 @@ async function harvestPrompts(product){
   console.log("Reddit prompts failed")
  }
 
- /* SHOPPING PROMPT TEMPLATES */
 
  const templates = [
 
@@ -210,13 +193,9 @@ async function harvestPrompts(product){
 
 }
 
-/*
-=====================================================
-SIMULATED AI QUERY
-=====================================================
-*/
 
-async function queryAI(prompt){
+
+async function queryAI(engine, prompt){
 
  try{
 
@@ -225,11 +204,12 @@ async function queryAI(prompt){
 
   const res = await axios.get(url)
 
-  return (
+  const text =
    res.data.AbstractText ||
    res.data.RelatedTopics?.map(t=>t.Text).join(" ") ||
    ""
-  )
+
+  return text
 
  }catch{
 
@@ -239,11 +219,7 @@ async function queryAI(prompt){
 
 }
 
-/*
-=====================================================
-AUDIT ENDPOINT
-=====================================================
-*/
+
 
 app.post("/api/audit", async (req,res)=>{
 
@@ -251,29 +227,42 @@ app.post("/api/audit", async (req,res)=>{
 
  const prompts = await harvestPrompts(product)
 
- const storeCounts = {}
+ const results = {}
 
- retailStores.forEach(store=>{
-  storeCounts[store] = 0
+ aiEngines.forEach(engine=>{
+  results[engine] = {}
+  retailStores.forEach(store=>{
+   results[engine][store] = 0
+  })
  })
 
  for(const prompt of prompts){
 
-  const response = await queryAI(prompt)
+  for(const engine of aiEngines){
 
-  for(const store of retailStores){
+   const response = await queryAI(engine, prompt)
 
-   if(response.toLowerCase().includes(store.toLowerCase())){
-    storeCounts[store]++
+   for(const store of retailStores){
+
+    if(response.toLowerCase().includes(store.toLowerCase())){
+     results[engine][store]++
+    }
+
    }
 
   }
 
  }
 
- const rankings = Object.entries(storeCounts)
-  .sort((a,b)=> b[1] - a[1])
-  .map(([store,mentions])=>({store,mentions}))
+ const rankings = {}
+
+ aiEngines.forEach(engine=>{
+
+  rankings[engine] = Object.entries(results[engine])
+   .sort((a,b)=> b[1]-a[1])
+   .map(([store,mentions])=>({store,mentions}))
+
+ })
 
  res.json({
   product,
@@ -283,11 +272,6 @@ app.post("/api/audit", async (req,res)=>{
 
 })
 
-/*
-=====================================================
-PRODUCT APIs
-=====================================================
-*/
 
 app.get("/api/products",(req,res)=>{
  res.json(products)
@@ -305,11 +289,6 @@ app.get("/api/products/category/:category",(req,res)=>{
 
 })
 
-/*
-=====================================================
-SERVER
-=====================================================
-*/
 
 const PORT = process.env.PORT || 5000
 
