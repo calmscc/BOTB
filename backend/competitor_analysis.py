@@ -1,12 +1,11 @@
 from collections import Counter
 
-def competitor_share(results):
-
-    all_products = []
-
-    for r in results:
-        all_products.extend(r["products"])
-
-    counts = Counter(all_products)
-
-    return dict(counts)
+def competitor_share(platform_products):
+    result = {}
+    for platform, products in platform_products.items():
+        # products is already a list, not a dict
+        counts = {}
+        for p in products:
+            counts[p] = counts.get(p, 0) + 1
+        result[platform] = counts
+    return result
