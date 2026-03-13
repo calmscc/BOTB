@@ -2,11 +2,15 @@ import express from "express"
 import cors from "cors"
 import axios from "axios"
 
+import path from "path";
+import { fileURLToPath } from "url";
+
+
+
 const app = express()
 
 app.use(cors())
 app.use(express.json())
-
 
 app.get("/", (req, res) => {
   res.send("NOLAlytics API is running");
