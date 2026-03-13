@@ -1,6 +1,14 @@
 from collections import Counter
 import itertools
 
+
+let auditStatus = {
+ progress:0,
+ currentPrompt:"",
+ completed:false,
+ results:null
+}
+
 def ai_visibility_audit(product, brand, platform_products):
 
     all_products = list(itertools.chain.from_iterable(platform_products.values()))
