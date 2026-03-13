@@ -1,68 +1,49 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VerifAI Dashboard</title>
+<html>
 
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<head>
+
+<title>VerifAI Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="/static/style.css">
+
 </head>
 
 <body>
 
-  <header>
-    <h1>VerifAI</h1>
-    <p>AI Product Visibility & Accuracy Analyzer</p>
-  </header>
+<h1>AI Product Visibility Dashboard</h1>
 
-  <section class="search-section">
+<input id="product" placeholder="Enter product (ex: hammer)">
+<input id="brand" placeholder="Enter brand (ex: Stanley)">
 
-    <h2>Run AI Visibility Analysis</h2>
+<button onclick="run()">Analyze</button>
 
-    <input 
-      type="text" 
-      id="productInput" 
-      placeholder="Enter product name (example: Acer Aspire 5)"
-    />
+<div class="cards">
 
-    <button onclick="runAnalysis()">
-      Run Analysis
-    </button>
+<div class="card">
+<h3>Visibility Score</h3>
+<div id="visibility">--</div>
+</div>
 
-  </section>
+<div class="card">
+<h3>Accuracy Score</h3>
+<div id="accuracy">--</div>
+</div>
 
-  <section class="results-section" id="results" style="display:none;">
+</div>
 
-    <div class="scores">
+<h2>Competitor Share</h2>
+<canvas id="competitorChart"></canvas>
 
-      <div class="card">
-        <h3>Visibility Score</h3>
-        <p id="visibilityScore">--%</p>
-      </div>
+<h2>AI Visibility Heatmap</h2>
+<canvas id="heatmapChart"></canvas>
 
-      <div class="card">
-        <h3>Accuracy Score</h3>
-        <p id="accuracyScore">--%</p>
-      </div>
+<h2>AI Responses</h2>
+<div id="responses"></div>
 
-    </div>
-
-    <div class="chart-container">
-
-      <h3>Competitor Presence in AI Responses</h3>
-
-      <canvas id="competitorChart"></canvas>
-
-    </div>
-
-  </section>
-
-  <footer>
-    <p>VerifAI Demo | AI Visibility Monitoring System</p>
-  </footer>
-
-  <script src="dashboard.js"></script>
+<script src="/static/dashboard.js"></script>
 
 </body>
+
 </html>
