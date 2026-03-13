@@ -9,7 +9,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-
+/*
+=====================================================
+AI ENGINES (SIMULATED)
+=====================================================
+*/
 
 const aiEngines = [
  "chatgpt",
@@ -17,11 +21,20 @@ const aiEngines = [
  "perplexity"
 ];
 
-
+/*
+=====================================================
+PATH SETUP
+=====================================================
+*/
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/*
+=====================================================
+SERVE FRONTEND
+=====================================================
+*/
 
 app.use(express.static(path.join(__dirname, "../frontend")));
 
@@ -29,80 +42,11 @@ app.get("/", (req, res) => {
  res.sendFile(path.join(__dirname, "../frontend/dashboard.html"));
 });
 
-
-
-function generateProducts(){
-
- const categories = {
-
-  tools:[
-   {brand:"Estwing", product:"Framing Hammer"},
-   {brand:"Stanley", product:"Claw Hammer"},
-   {brand:"DeWalt", product:"Steel Hammer"},
-   {brand:"Milwaukee", product:"Construction Hammer"}
-  ],
-
-  electronics:[
-   {brand:"Apple", product:"iPhone 15"},
-   {brand:"Samsung", product:"Galaxy S24"},
-   {brand:"Sony", product:"WH-1000XM5 Headphones"},
-   {brand:"Dell", product:"XPS 13 Laptop"}
-  ],
-
-  appliances:[
-   {brand:"Dyson", product:"V15 Vacuum"},
-   {brand:"Ninja", product:"Air Fryer"},
-   {brand:"Instant Pot", product:"Pressure Cooker"}
-  ],
-
-  sports:[
-   {brand:"Nike", product:"Air Zoom Pegasus"},
-   {brand:"Adidas", product:"Ultraboost"},
-   {brand:"Wilson", product:"Pro Staff Tennis Racket"}
-  ]
-
- }
-
- const stores = [
-  "Amazon",
-  "Walmart",
-  "Target",
-  "Best Buy",
-  "Home Depot",
-  "Lowe's"
- ]
-
- let id = 1
- const products = []
-
- for(const category in categories){
-
-  categories[category].forEach(p=>{
-
-   products.push({
-
-    id:id++,
-
-    name:`${p.brand} ${p.product}`,
-    brand:p.brand,
-    category:category,
-    store:stores[Math.floor(Math.random()*stores.length)],
-    price:Math.floor(Math.random()*900)+50,
-    rating:(Math.random()*2+3).toFixed(1),
-    description:`${p.brand} ${p.product} designed for professional and consumer use`
-
-   })
-
-  })
-
- }
-
- return products
-}
-
-const products = generateProducts()
-
-
+/*
+=====================================================
+PROMPT GENERATOR
+=====================================================
+*/
 
 async function harvestPrompts(product){
 
@@ -111,26 +55,37 @@ async function harvestPrompts(product){
  try{
 
   const googleURL =
-  `https://suggestqueries.google.com/complete/search?client=firefox&q=${product}`
+  `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(product)}`
 
-  const googleRes = await axios.get(googleURL)
+  const googleRes = await axios.get(googleURL,{
+   timeout:10000
+  })
 
   googleRes.data[1].forEach(p=>prompts.push(p))
 
- }catch{}
+ }catch{
+  console.log("Google autocomplete failed")
+ }
 
  try{
 
   const redditURL =
-  `https://www.reddit.com/search.json?q=${product}&limit=20`
+  `https://www.reddit.com/search.json?q=${encodeURIComponent(product)}&limit=20`
 
-  const redditRes = await axios.get(redditURL)
+  const redditRes = await axios.get(redditURL,{
+   timeout:10000,
+   headers:{
+    "User-Agent":"Mozilla/5.0"
+   }
+  })
 
   redditRes.data.data.children.forEach(post=>{
    prompts.push(post.data.title)
   })
 
- }catch{}
+ }catch{
+  console.log("Reddit prompt generation failed")
+ }
 
  const templates = [
 
@@ -151,21 +106,24 @@ async function harvestPrompts(product){
 
 }
 
+/*
+=====================================================
+SEARCH SOURCE 1 — DUCKDUCKGO
+=====================================================
+*/
 
-
-async function queryAI(engine, prompt){
+async function queryDuckDuckGo(prompt){
 
  try{
 
-const encodedPrompt = encodeURIComponent(prompt)
+  const url =
+  `https://api.duckduckgo.com/?q=${encodeURIComponent(prompt)}&format=json`
 
-const url = `https://api.duckduckgo.com/?q=${encodedPrompt}&format=json`
-
-  const res = await axios.get(url, {
-   timeout: 5000,
-    headers: {
-     "User-Agent": "Mozilla/5.0 (NOLAlytics AI Analyzer)"
- }
+  const res = await axios.get(url,{
+   timeout:10000,
+   headers:{
+    "User-Agent":"Mozilla/5.0"
+   }
   })
 
   const text =
@@ -175,24 +133,128 @@ const url = `https://api.duckduckgo.com/?q=${encodedPrompt}&format=json`
 
   return text
 
+ }catch{
+
+  console.log("DuckDuckGo failed:",prompt)
+
+  return ""
+
  }
- 
- 
-catch(err){
- console.log("Query failed:", prompt)
- console.log("Error:", err.message)
+
+}
+
+/*
+=====================================================
+SEARCH SOURCE 2 — WIKIPEDIA
+=====================================================
+*/
+
+async function queryWikipedia(prompt){
+
+ try{
+
+  const url =
+  `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(prompt)}&format=json`
+
+  const res = await axios.get(url,{
+   timeout:10000
+  })
+
+  const results = res.data.query.search
+
+  const text = results.map(r=>r.snippet).join(" ")
+
+  return text
+
+ }catch{
+
+  console.log("Wikipedia failed:",prompt)
+
+  return ""
+
+ }
+
+}
+
+/*
+=====================================================
+SEARCH SOURCE 3 — REDDIT
+=====================================================
+*/
+
+async function queryReddit(prompt){
+
+ try{
+
+  const url =
+  `https://www.reddit.com/search.json?q=${encodeURIComponent(prompt)}&limit=10`
+
+  const res = await axios.get(url,{
+   timeout:10000,
+   headers:{
+    "User-Agent":"Mozilla/5.0"
+   }
+  })
+
+  const posts = res.data.data.children
+
+  const text = posts.map(p=>p.data.title).join(" ")
+
+  return text
+
+ }catch{
+
+  console.log("Reddit search failed:",prompt)
+
+  return ""
+
+ }
+
+}
+
+/*
+=====================================================
+MULTI-SOURCE QUERY ENGINE
+=====================================================
+*/
+
+async function queryMultipleSources(prompt){
+
+ const sources = [
+  queryDuckDuckGo,
+  queryWikipedia,
+  queryReddit
+ ]
+
+ for(const source of sources){
+
+  const response = await source(prompt)
+
+  if(response && response.length > 0){
+   return response
+  }
+
+ }
+
  return ""
-}
 
 }
 
-
+/*
+=====================================================
+AI VISIBILITY AUDIT
+=====================================================
+*/
 
 app.post("/api/audit", async (req,res)=>{
 
  const { store, product } = req.body
 
- const prompts = await harvestPrompts(product)
+ console.log("Starting audit:",store,product)
+
+ const prompts = (await harvestPrompts(product)).slice(0,20)
+
+ console.log("Prompts generated:",prompts.length)
 
  const mentions = {}
 
@@ -202,9 +264,11 @@ app.post("/api/audit", async (req,res)=>{
 
  for(const prompt of prompts){
 
+  console.log("Testing prompt:",prompt)
+
   for(const engine of aiEngines){
 
-   const response = await queryAI(engine, prompt)
+   const response = await queryMultipleSources(prompt)
 
    if(response.toLowerCase().includes(store.toLowerCase())){
     mentions[engine]++
@@ -221,6 +285,8 @@ app.post("/api/audit", async (req,res)=>{
    Math.round((mentions[engine] / prompts.length) * 100)
  })
 
+ console.log("Audit finished")
+
  res.json({
   store,
   product,
@@ -231,24 +297,11 @@ app.post("/api/audit", async (req,res)=>{
 
 })
 
-
-app.get("/api/products",(req,res)=>{
- res.json(products)
-})
-
-app.get("/api/products/category/:category",(req,res)=>{
-
- const category = req.params.category
-
- const filtered = products.filter(
-  p => p.category === category
- )
-
- res.json(filtered)
-
-})
-
-
+/*
+=====================================================
+SERVER START
+=====================================================
+*/
 
 const PORT = process.env.PORT || 5000
 
