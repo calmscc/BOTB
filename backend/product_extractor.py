@@ -2,17 +2,13 @@ import json
 from backend.config import client
 
 def extract_products(text):
-
     prompt = f"""
 Extract product or brand names from this text.
-
-Return ONLY valid JSON like this:
+Return ONLY valid JSON in this format:
 {{"products":["brand1","brand2","brand3"]}}
-
 Text:
 {text}
 """
-
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
@@ -22,19 +18,26 @@ Text:
     )
 
     content = response.choices[0].message.content
-    print("AI returned:", content)  # helps debugging
+    print("AI returned:", content)  # debug
 
+    # Try parsing JSON first
     try:
         data = json.loads(content)
-        return data.get("products", [])
-    except json.JSONDecodeError:
-        # fallback: try splitting lines if AI didn't return JSON
-        lines = content.split("\n")
-        products = []
-        for line in lines:
-            # remove numbering if present
-            line = line.strip()
-            if line and any(c.isalnum() for c in line):
-                line = line.split(".")[-1].strip()
-                products.append(line)
-        return products
+        if isinstance(data, dict) and "products" in data:
+            return data["products"]
+    except Exception as e:
+        print("JSON parse failed:", e)
+
+    # Fallback: parse as plain text
+    products = []
+    for line in content.split("\n"):
+        line = line.strip()
+        if not line:
+            continue
+        # remove numbering if present
+        if "." in line:
+            line = line.split(".")[-1].strip()
+        # skip lines that aren’t real product names
+        if line:
+            products.append(line)
+    return products
