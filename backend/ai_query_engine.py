@@ -1,20 +1,29 @@
 from backend.config import client
 
+def generate_queries(product):
+
+    return [
+        f"Where can I buy the best {product}?",
+        f"What stores sell the best {product}?",
+        f"Where should I buy a high quality {product}?",
+        f"What retailers sell the most popular {product}?",
+        f"Where do professionals buy their {product}?"
+    ]
+
+
 def query_ai(product):
 
-    query = f"What are the most popular brands or products for {product}? Give a ranked list."
+    queries = generate_queries(product)
 
-    print("Querying Groq...")
+    responses = {}
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": query}]
-    )
+    for i, q in enumerate(queries):
 
-    result = response.choices[0].message.content
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role":"user","content":q}]
+        )
 
-    print(result)
+        responses[f"query_{i+1}"] = response.choices[0].message.content
 
-    return {
-        "groq": result
-    }
+    return responses
