@@ -54,6 +54,12 @@ input{
  font-weight:bold;
 }
 
+.ai-section{
+ margin-top:20px;
+ padding:10px;
+ border-top:1px solid #ddd;
+}
+
 </style>
 
 </head>
@@ -86,45 +92,55 @@ input{
 
 const API_BASE = "";
 
+/*
+=====================================================
+RUN AI AUDIT
+=====================================================
+*/
+
 async function runAudit(){
 
  const product = document.getElementById("productInput").value
 
  document.getElementById("results").innerHTML =
- "Analyzing AI recommendations..."
+ "Running AI visibility audit..."
 
  const res = await fetch(`${API_BASE}/api/audit`,{
 
   method:"POST",
-
   headers:{
    "Content-Type":"application/json"
   },
-
   body:JSON.stringify({ product })
 
  })
 
  const data = await res.json()
 
- let rankingHTML = "<h3>Store Rankings</h3>"
-
- data.rankings.forEach(r=>{
-  rankingHTML += `${r.store} — ${r.mentions} mentions<br>`
- })
-
- document.getElementById("results").innerHTML = `
-
-  <h3>AI Retail Visibility Results</h3>
-
-  Product: <b>${data.product}</b><br><br>
-
-  ${rankingHTML}
-
-  <br>
-  Queries Tested: ${data.promptsTested}
-
+ let html = `
+ <h3>AI Retail Visibility Results</h3>
+ Product: <b>${data.product}</b><br><br>
  `
+
+ for(const engine in data.rankings){
+
+  html += `<div class="ai-section">`
+
+  html += `<h4>${engine.toUpperCase()}</h4>`
+
+  data.rankings[engine].forEach(r=>{
+
+   html += `${r.store} — ${r.mentions} mentions<br>`
+
+  })
+
+  html += `</div>`
+
+ }
+
+ html += `<br>Queries Tested: ${data.promptsTested}`
+
+ document.getElementById("results").innerHTML = html
 
 }
 
