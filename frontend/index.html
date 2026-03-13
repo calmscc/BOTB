@@ -15,10 +15,6 @@ body{
  background:#f9f9f9;
 }
 
-h1{
- color:#333;
-}
-
 button{
  padding:10px 15px;
  margin-top:10px;
@@ -32,32 +28,9 @@ input{
 
 #results{
  margin-top:20px;
- font-size:18px;
  background:white;
  padding:15px;
  border-radius:8px;
-}
-
-#products{
- margin-top:30px;
- background:white;
- padding:15px;
- border-radius:8px;
-}
-
-.product-card{
- border-bottom:1px solid #ddd;
- padding:10px;
-}
-
-.product-title{
- font-weight:bold;
-}
-
-.ai-section{
- margin-top:20px;
- padding:10px;
- border-top:1px solid #ddd;
 }
 
 </style>
@@ -68,134 +41,58 @@ input{
 
 <h1>NOLAlytics AI Retail Visibility Analyzer</h1>
 
-<h2>Analyze AI Shopping Visibility</h2>
+<h2>Check Store Visibility in AI Chatbots</h2>
 
-<input id="productInput" placeholder="Enter product (example: headphones)" />
+<input id="storeInput" placeholder="Retail Store (example: Walmart)" />
+
+<input id="productInput" placeholder="Product (example: headphones)" />
 
 <button onclick="runAudit()">Analyze Visibility</button>
 
-<h3>Results</h3>
-
 <div id="results"></div>
-
-<hr>
-
-<h2>Retail Product Explorer</h2>
-
-<input id="categoryInput" placeholder="Category (tools, electronics)" />
-
-<button onclick="loadCategory()">Load Category</button>
-
-<div id="products"></div>
 
 <script>
 
-const API_BASE = "";
-
-/*
-=====================================================
-RUN AI AUDIT
-=====================================================
-*/
-
 async function runAudit(){
 
+ const store = document.getElementById("storeInput").value
  const product = document.getElementById("productInput").value
 
  document.getElementById("results").innerHTML =
  "Running AI visibility audit..."
 
- const res = await fetch(`${API_BASE}/api/audit`,{
+ const res = await fetch(`/api/audit`,{
 
   method:"POST",
   headers:{
    "Content-Type":"application/json"
   },
-  body:JSON.stringify({ product })
+  body:JSON.stringify({ store, product })
 
  })
 
  const data = await res.json()
 
  let html = `
- <h3>AI Retail Visibility Results</h3>
+ <h3>AI Visibility Results</h3>
+
+ Store: <b>${data.store}</b><br>
  Product: <b>${data.product}</b><br><br>
  `
 
- for(const engine in data.rankings){
+ for(const engine in data.visibility){
 
-  html += `<div class="ai-section">`
+  html += `
+   <h4>${engine.toUpperCase()}</h4>
 
-  html += `<h4>${engine.toUpperCase()}</h4>`
-
-  data.rankings[engine].forEach(r=>{
-
-   html += `${r.store} — ${r.mentions} mentions<br>`
-
-  })
-
-  html += `</div>`
-
+   Mentions: ${data.mentions[engine]} <br>
+   Visibility Score: ${data.visibility[engine]}% <br><br>
+  `
  }
 
- html += `<br>Queries Tested: ${data.promptsTested}`
+ html += `Queries Tested: ${data.promptsTested}`
 
  document.getElementById("results").innerHTML = html
-
-}
-
-/*
-=====================================================
-LOAD PRODUCTS BY CATEGORY
-=====================================================
-*/
-
-async function loadCategory(){
-
- const category =
- document.getElementById("categoryInput").value
-
- const res = await fetch(
- `${API_BASE}/api/products/category/${category}`
- )
-
- const data = await res.json()
-
- renderProducts(data)
-
-}
-
-/*
-=====================================================
-RENDER PRODUCTS
-=====================================================
-*/
-
-function renderProducts(products){
-
- const container = document.getElementById("products")
-
- container.innerHTML = ""
-
- products.forEach(p=>{
-
-  container.innerHTML += `
-
-   <div class="product-card">
-
-    <div class="product-title">${p.name}</div>
-
-    Brand: ${p.brand} <br>
-    Category: ${p.category} <br>
-    Store: ${p.store} <br>
-    Price: $${p.price} <br>
-    Rating: ${p.rating}
-
-   </div>
-
-  `
-
- })
 
 }
 
