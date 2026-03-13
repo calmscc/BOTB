@@ -1,27 +1,27 @@
-import express from "express"
-import cors from "cors"
-import axios from "axios"
-
+import express from "express";
+import cors from "cors";
+import axios from "axios";
 import path from "path";
 import { fileURLToPath } from "url";
 
+const app = express();
+
+app.use(cors());
+app.use(express.json());
 
 
-const app = express()
 
-app.use(cors())
-app.use(express.json())
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+app.use(express.static(path.join(__dirname, "../frontend")));
 
 app.get("/", (req, res) => {
-  res.send("NOLAlytics API is running");
+  res.sendFile(path.join(__dirname, "../frontend/dashboard.html"));
 });
 
-/*
-=====================================================
-GENERATED PRODUCT DATABASE
-(No JSON files required)
-=====================================================
-*/
+
 
 function generateProducts(){
 
@@ -100,16 +100,11 @@ function generateProducts(){
  }
 
  return products
-
 }
 
 const products = generateProducts()
 
-/*
-=====================================================
-AUDIT STATUS TRACKER
-=====================================================
-*/
+
 
 let auditStatus = {
  progress:0,
@@ -118,11 +113,7 @@ let auditStatus = {
  results:null
 }
 
-/*
-=====================================================
-PROMPT GENERATION
-=====================================================
-*/
+
 
 async function getGooglePrompts(keyword){
 
@@ -146,13 +137,11 @@ async function getGooglePrompts(keyword){
 function expandPrompts(keyword){
 
  return [
-
   `best ${keyword} brands`,
   `top rated ${keyword}`,
   `what ${keyword} do professionals recommend`,
   `best ${keyword} under 100`,
   `where can I buy ${keyword}`
-
  ]
 
 }
@@ -169,11 +158,7 @@ async function harvestPrompts(keyword){
 
 }
 
-/*
-=====================================================
-AI QUERY SIMULATION
-=====================================================
-*/
+
 
 async function queryAI(prompt){
 
@@ -194,11 +179,6 @@ async function queryAI(prompt){
 
 }
 
-/*
-=====================================================
-RESPONSE ANALYSIS
-=====================================================
-*/
 
 function extractMentions(response,brands){
 
@@ -210,20 +190,6 @@ function extractMentions(response,brands){
 
 }
 
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dashboard.html"));
-});
-
-
-/*
-=====================================================
-AUDIT ENDPOINT
-=====================================================
-*/
 
 app.post("/api/audit", async (req,res)=>{
 
@@ -262,32 +228,20 @@ app.post("/api/audit", async (req,res)=>{
  auditStatus.completed = true
 
  auditStatus.results = {
-
   visibilityScore:Math.round(score),
-
   promptsTested:prompts.length
-
  }
 
  res.json({ message:"Audit started" })
 
 })
 
-/*
-=====================================================
-AUDIT STATUS API
-=====================================================
-*/
+
 
 app.get("/api/status",(req,res)=>{
  res.json(auditStatus)
 })
 
-/*
-=====================================================
-PRODUCT API
-=====================================================
-*/
 
 app.get("/api/products",(req,res)=>{
  res.json(products)
@@ -317,13 +271,9 @@ app.get("/api/products/search/:brand",(req,res)=>{
 
 })
 
-/*
-=====================================================
-SERVER
-=====================================================
-*/
 
-const PORT = 5000
+
+const PORT = process.env.PORT || 5000
 
 app.listen(PORT,()=>{
  console.log(`Server running on port ${PORT}`)
