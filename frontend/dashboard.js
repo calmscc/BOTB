@@ -3,41 +3,120 @@ async function run(){
 try{
 
 // Get user inputs
-let product = document.getElementById("product").value
-let brand = document.getElementById("brand").value
+let product = document.getElementById("product").value.trim()
+let brand = document.getElementById("brand").value.trim()
 
-// Basic validation
+// Validation
 if(!product || !brand){
 alert("Please enter both a product and brand")
 return
 }
 
-// Show loading message
+// Show results section
+document.getElementById("results-section").style.display = "block"
+
+// Loading messages
 document.getElementById("visibility").innerText = "Analyzing..."
 document.getElementById("accuracy").innerText = "Analyzing..."
 document.getElementById("responses").innerHTML = "<p>Running AI queries...</p>"
 
 // Call backend API
-let res = await fetch(`/analyze?product=${encodeURIComponent(product)}&brand=${encodeURIComponent(brand)}`)
+let res = await fetch(
+`/analyze?product=${encodeURIComponent(product)}&brand=${encodeURIComponent(brand)}`
+)
+
+// Check for server errors
+if(!res.ok){
+throw new Error("Server error")
+}
 
 let data = await res.json()
 
 console.log("API DATA:", data)
 
-// Update visibility score
+
+// ---------------------------
+// Visibility Score
+// ---------------------------
 if(data.visibility !== undefined){
 document.getElementById("visibility").innerText =
 data.visibility + "%"
 }
 
-// Update accuracy score
+
+// ---------------------------
+// Accuracy Score
+// ---------------------------
 if(data.accuracy !== undefined){
 document.getElementById("accuracy").innerText =
-data.accuracy + "%"
+Math.round(data.accuracy * 100) + "%"
 }
 
-// Show AI responses
+
+// ---------------------------
+// Platform Products Table
+// ---------------------------
+const platformBody = document.querySelector("#platform-products-table tbody")
+
+if(platformBody && data.platform_products){
+
+platformBody.innerHTML = ""
+
+for(const [platform, products] of Object.entries(data.platform_products)){
+
+const tr = document.createElement("tr")
+
+const tdPlatform = document.createElement("td")
+tdPlatform.textContent = platform
+
+const tdProducts = document.createElement("td")
+tdProducts.textContent = products.join(", ")
+
+tr.appendChild(tdPlatform)
+tr.appendChild(tdProducts)
+
+platformBody.appendChild(tr)
+
+}
+
+}
+
+
+// ---------------------------
+// Competitor Table
+// ---------------------------
+const competitorBody = document.querySelector("#competitors-table tbody")
+
+if(competitorBody && data.competitors){
+
+competitorBody.innerHTML = ""
+
+for(const [name,count] of Object.entries(data.competitors)){
+
+const tr = document.createElement("tr")
+
+const tdName = document.createElement("td")
+tdName.textContent = name
+
+const tdCount = document.createElement("td")
+tdCount.textContent = count
+
+tr.appendChild(tdName)
+tr.appendChild(tdCount)
+
+competitorBody.appendChild(tr)
+
+}
+
+}
+
+
+// ---------------------------
+// AI Responses
+// ---------------------------
 let html = "<h2>AI Responses</h2>"
+
+if(data.responses){
 
 for(let prompt in data.responses){
 
@@ -50,25 +129,10 @@ html += `
 
 }
 
+}
+
 document.getElementById("responses").innerHTML = html
 
-
-// Show competitor mentions if available
-if(data.competitors){
-
-let competitorHTML = "<h2>Competitor Mentions</h2><ul>"
-
-for(let c in data.competitors){
-
-competitorHTML += `<li>${c}: ${data.competitors[c]}</li>`
-
-}
-
-competitorHTML += "</ul>"
-
-document.getElementById("responses").innerHTML += competitorHTML
-
-}
 
 }catch(error){
 
