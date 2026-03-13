@@ -5,14 +5,24 @@
 
 <title>NOLAlytics AI Retail Visibility Analyzer</title>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 
 body{
  font-family:Arial;
- max-width:900px;
+ max-width:1100px;
  margin:auto;
  padding:40px;
- background:#f9f9f9;
+ background:#f5f7fb;
+}
+
+h1{
+ margin-bottom:10px;
+}
+
+h2{
+ margin-top:40px;
 }
 
 button{
@@ -22,15 +32,46 @@ button{
 }
 
 input{
- padding:8px;
+ padding:10px;
  margin-right:10px;
+}
+
+.card-container{
+ display:flex;
+ gap:20px;
+ margin-top:20px;
+}
+
+.card{
+ background:white;
+ padding:20px;
+ border-radius:10px;
+ flex:1;
+ box-shadow:0 2px 6px rgba(0,0,0,0.1);
+ text-align:center;
 }
 
 #results{
  margin-top:20px;
  background:white;
- padding:15px;
+ padding:20px;
  border-radius:8px;
+ box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+#history{
+ margin-top:20px;
+ background:white;
+ padding:20px;
+ border-radius:8px;
+}
+
+canvas{
+ margin-top:30px;
+ background:white;
+ padding:20px;
+ border-radius:10px;
+ box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
 </style>
@@ -41,7 +82,11 @@ input{
 
 <h1>NOLAlytics AI Retail Visibility Analyzer</h1>
 
-<h2>Check Store Visibility in AI Chatbots</h2>
+<p>
+Analyze how frequently a retailer appears in AI-generated product recommendations.
+</p>
+
+<h2>Run AI Visibility Audit</h2>
 
 <input id="storeInput" placeholder="Retail Store (example: Walmart)" />
 
@@ -49,9 +94,40 @@ input{
 
 <button onclick="runAudit()">Analyze Visibility</button>
 
+<div class="card-container">
+
+<div class="card">
+<h3>Prompts Tested</h3>
+<h2 id="promptCount">0</h2>
+</div>
+
+<div class="card">
+<h3>Best AI Engine</h3>
+<h2 id="bestEngine">-</h2>
+</div>
+
+<div class="card">
+<h3>Highest Score</h3>
+<h2 id="bestScore">0%</h2>
+</div>
+
+</div>
+
 <div id="results"></div>
 
+<h2>AI Visibility Leaderboard</h2>
+
+<canvas id="visibilityChart"></canvas>
+
+<h2>Audit History (Database)</h2>
+
+<div id="history">
+Loading audits...
+</div>
+
 <script>
+
+let chart
 
 async function runAudit(){
 
@@ -61,7 +137,7 @@ async function runAudit(){
  document.getElementById("results").innerHTML =
  "Running AI visibility audit..."
 
- const res = await fetch(`/api/audit`,{
+ const res = await fetch("/api/audit",{
 
   method:"POST",
   headers:{
@@ -73,28 +149,120 @@ async function runAudit(){
 
  const data = await res.json()
 
- let html = `
- <h3>AI Visibility Results</h3>
+ if(data.error){
 
+  document.getElementById("results").innerHTML = data.error
+  return
+
+ }
+
+ document.getElementById("promptCount").innerText =
+ data.promptsTested
+
+ let html = `
+ <h3>Audit Results</h3>
  Store: <b>${data.store}</b><br>
  Product: <b>${data.product}</b><br><br>
  `
 
- for(const engine in data.visibility){
+ const engines = Object.keys(data.visibility)
+ const scores = Object.values(data.visibility)
+
+ let bestScore = 0
+ let bestEngine = ""
+
+ engines.forEach((engine,i)=>{
 
   html += `
-   <h4>${engine.toUpperCase()}</h4>
-
-   Mentions: ${data.mentions[engine]} <br>
-   Visibility Score: ${data.visibility[engine]}% <br><br>
+   <b>${engine.toUpperCase()}</b><br>
+   Mentions: ${data.mentions[engine]}<br>
+   Visibility Score: ${data.visibility[engine]}%<br><br>
   `
- }
 
- html += `Queries Tested: ${data.promptsTested}`
+  if(scores[i] > bestScore){
+   bestScore = scores[i]
+   bestEngine = engine
+  }
+
+ })
+
+ document.getElementById("bestEngine").innerText =
+ bestEngine.toUpperCase()
+
+ document.getElementById("bestScore").innerText =
+ bestScore + "%"
 
  document.getElementById("results").innerHTML = html
 
+ renderChart(data.visibility)
+
+ loadHistory()
+
 }
+
+function renderChart(visibility){
+
+ const labels = Object.keys(visibility)
+ const values = Object.values(visibility)
+
+ const ctx =
+ document.getElementById("visibilityChart").getContext("2d")
+
+ if(chart){
+  chart.destroy()
+ }
+
+ chart = new Chart(ctx,{
+
+  type:"bar",
+
+  data:{
+   labels:labels,
+   datasets:[{
+    label:"AI Visibility %",
+    data:values,
+    borderWidth:1
+   }]
+  },
+
+  options:{
+   scales:{
+    y:{
+     beginAtZero:true,
+     max:100
+    }
+   }
+  }
+
+ })
+
+}
+
+async function loadHistory(){
+
+ const res = await fetch("/api/history")
+ const data = await res.json()
+
+ let html = ""
+
+ data.forEach(audit=>{
+
+  html += `
+   <div>
+    <b>${audit.store}</b> – ${audit.product}
+    <br>
+    Prompts: ${audit.promptsTested}
+    <hr>
+   </div>
+  `
+
+ })
+
+ document.getElementById("history").innerHTML = html
+
+}
+
+loadHistory()
 
 </script>
 
