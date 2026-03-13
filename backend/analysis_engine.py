@@ -1,30 +1,24 @@
 from collections import Counter
 import itertools
 
+def ai_visibility_audit(product, brand, platform_products):
 
-def retailer_visibility(platform_retailers, company):
+    all_products = list(itertools.chain.from_iterable(platform_products.values()))
+    total_mentions = len(all_products)
 
-    appearances = 0
-    total_queries = len(platform_retailers)
-
-    for retailers in platform_retailers.values():
-
-        retailers_lower = [r.lower() for r in retailers]
-
-        if company.lower() in retailers_lower:
-            appearances += 1
-
-    score = (appearances / total_queries) * 100
-
-    return round(score,2)
-
-
-def retailer_share(platform_retailers):
-
-    all_retailers = list(
-        itertools.chain.from_iterable(platform_retailers.values())
+    brand_mentions = sum(
+        1 for p in all_products if brand.lower() in p.lower()
     )
 
-    counts = Counter(all_retailers)
+    visibility = (brand_mentions / total_mentions * 100) if total_mentions else 0
 
-    return dict(counts)
+    competitor_counts = Counter(all_products)
+
+    return {
+        "product": product,
+        "brand": brand,
+        "visibility_percent": round(visibility, 2),
+        "total_ai_mentions": total_mentions,
+        "brand_mentions": brand_mentions,
+        "competitor_mentions": dict(competitor_counts)
+    }
