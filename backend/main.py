@@ -1,74 +1,49 @@
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
-from backend.ai_query_engine import run_queries
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+from backend.ai_query_engine import query_ai
 from backend.product_extractor import extract_products
-from backend.scoring import visibility_score, accuracy_score
 from backend.competitor_analysis import competitor_share
+from backend.analysis_engine import visibility_score, accuracy_score, heatmap
 
 app = FastAPI()
 
-@app.get("/", response_class=HTMLResponse)
-def dashboard():
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
-    return """
-    <html>
-    <head>
-        <title>VerifAI Dashboard</title>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    </head>
 
-    <body>
+@app.get("/")
+def home():
+    return FileResponse("frontend/index.html")
 
-    <h1>VerifAI AI Visibility Dashboard</h1>
 
-    <input id="product" placeholder="Enter Product Name">
-    <button onclick="runAnalysis()">Run Analysis</button>
+@app.get("/analyze")
 
-    <h2>Visibility Score</h2>
-    <div id="visibility"></div>
+def analyze(product:str, brand:str):
 
-    <h2>Accuracy Score</h2>
-    <div id="accuracy"></div>
+    responses = query_ai(product)
 
-    <canvas id="chart"></canvas>
+    platform_products = {}
 
-    <script>
+    for platform, text in responses.items():
 
-    async function runAnalysis(){
+        products = extract_products(text)
 
-        let product = document.getElementById("product").value
+        platform_products[platform] = products
 
-        let res = await fetch(`/run-analysis?product=${product}`)
+    competitors = competitor_share(platform_products)
 
-        let data = await res.json()
+    visibility = visibility_score(platform_products, brand)
 
-        document.getElementById("visibility").innerText =
-        data.visibility_score + "%"
+    accuracy = accuracy_score()
 
-        document.getElementById("accuracy").innerText =
-        data.accuracy_score + "%"
+    heat = heatmap(platform_products)
 
-        let labels = Object.keys(data.competitors)
-        let values = Object.values(data.competitors)
-
-        new Chart(document.getElementById("chart"),{
-
-            type:"bar",
-
-            data:{
-                labels:labels,
-                datasets:[{
-                    label:"Competitor Appearances",
-                    data:values
-                }]
-            }
-
-        })
-
+    return {
+        "responses": responses,
+        "platform_products": platform_products,
+        "competitors": competitors,
+        "visibility": visibility,
+        "accuracy": accuracy,
+        "heatmap": heat
     }
-
-    </script>
-
-    </body>
-    </html>
-    """
