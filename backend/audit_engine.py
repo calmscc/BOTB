@@ -1,25 +1,61 @@
-from collections import Counter
-import itertools
+import random
+from ai_query_engine import query_ai
+from retail_extractor import extract_retailers
+from verification_engine import calculate_visibility
+
+ai_engines = ["chatgpt","gemini","perplexity"]
+
+def generate_prompts(product):
+
+    prompts = []
+
+    templates = [
+        "best PRODUCT",
+        "top rated PRODUCT",
+        "best PRODUCT brands",
+        "where to buy PRODUCT",
+        "best place to buy PRODUCT",
+        "best PRODUCT deals",
+        "best PRODUCT online",
+        "best PRODUCT reddit",
+        "best PRODUCT for beginners",
+        "best PRODUCT for professionals"
+    ]
+
+    for i in range(20):
+
+        for t in templates:
+            prompts.append(t.replace("PRODUCT",product))
+
+    return prompts
 
 
-def ai_visibility_audit(product, brand, platform_products):
+def run_audit(store, product):
 
-    all_products = list(itertools.chain.from_iterable(platform_products.values()))
-    total_mentions = len(all_products)
+    prompts = generate_prompts(product)
 
-    brand_mentions = sum(
-        1 for p in all_products if brand.lower() in p.lower()
-    )
+    mentions = {}
 
-    visibility = (brand_mentions / total_mentions * 100) if total_mentions else 0
+    for engine in ai_engines:
+        mentions[engine] = 0
 
-    competitor_counts = Counter(all_products)
+    for prompt in prompts:
+
+        for engine in ai_engines:
+
+            response = query_ai(prompt)
+
+            retailers = extract_retailers(response)
+
+            if store.lower() in retailers:
+                mentions[engine] += 1
+
+    visibility = calculate_visibility(mentions,len(prompts))
 
     return {
-        "product": product,
-        "brand": brand,
-        "visibility_percent": round(visibility, 2),
-        "total_ai_mentions": total_mentions,
-        "brand_mentions": brand_mentions,
-        "competitor_mentions": dict(competitor_counts)
+        "store":store,
+        "product":product,
+        "promptsTested":len(prompts),
+        "mentions":mentions,
+        "visibility":visibility
     }
