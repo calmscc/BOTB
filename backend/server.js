@@ -4,6 +4,8 @@ import axios from "axios";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import "./scheduler.js";
+
 const app = express();
 
 app.use(cors());
@@ -219,7 +221,19 @@ async function queryAI(engine, prompt){
 
 }
 
+app.get("/api/results/:product", async (req,res)=>{
 
+ const { product } = req.params;
+
+ const { data } = await supabase
+  .from("ai_visibility_results")
+  .select("*")
+  .eq("product", product)
+  .order("mentions", { ascending:false });
+
+ res.json(data);
+
+});
 
 app.post("/api/audit", async (req,res)=>{
 
